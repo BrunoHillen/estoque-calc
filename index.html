@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Estoque</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">▦</span>
+          <div>
+            <span class="logo-title">EstoqueCalc</span>
+            <span class="logo-sub">Dimensionamento Inteligente</span>
+          </div>
+        </div>
+        <div class="header-badge">Análise de Demanda</div>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- PAINEL DE ENTRADA -->
+      <section class="card config-card">
+        <div class="card-header">
+          <span class="card-icon">⚙</span>
+          <h2>Parâmetros Operacionais</h2>
+        </div>
+
+        <div class="config-grid">
+          <!-- Lead Time -->
+          <div class="field-group">
+            <label class="field-label">Lead Time de Reposição</label>
+            <div class="input-row">
+              <input type="number" id="leadTime" class="input" value="5" min="1" />
+              <select id="leadTimeUnit" class="select">
+                <option value="dia">Dias</option>
+                <option value="semana">Semanas</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Dias úteis / mês -->
+          <div class="field-group">
+            <label class="field-label">Dias Úteis por Mês</label>
+            <input type="number" id="diasUteis" class="input" value="20" min="1" max="31" />
+          </div>
+
+          <!-- Nível de serviço -->
+          <div class="field-group">
+            <label class="field-label">Nível de Serviço (%)</label>
+            <div class="ns-options">
+              <button class="ns-btn active" data-ns="90">90%</button>
+              <button class="ns-btn active-check" data-ns="95">95%</button>
+              <button class="ns-btn" data-ns="98">98%</button>
+              <button class="ns-btn" data-ns="99">99%</button>
+              <button class="ns-btn" data-ns="99.9">99,9%</button>
+            </div>
+            <div class="ns-custom-row">
+              <span class="ns-custom-label">Personalizado:</span>
+              <input type="number" id="nsCustom" class="input input-sm" placeholder="ex: 97" min="50" max="99.99" step="0.1" />
+              <span class="ns-custom-label">%</span>
+            </div>
+          </div>
+
+          <!-- Perdas -->
+          <div class="field-group">
+            <label class="field-label">Perdas no Processo (%)</label>
+            <input type="number" id="perdas" class="input" value="10" min="0" max="100" step="0.5" />
+          </div>
+        </div>
+      </section>
+
+      <!-- DADOS DE DEMANDA -->
+      <section class="card">
+        <div class="card-header">
+          <span class="card-icon">📊</span>
+          <h2>Dados de Demanda</h2>
+          <span class="card-tip">Misture períodos — o sistema normaliza tudo</span>
+        </div>
+
+        <div class="demand-toolbar">
+          <div class="add-row-controls">
+            <input type="text" id="newPeriodLabel" class="input input-sm" placeholder="Ex: Jan/24" style="width:110px" />
+            <input type="number" id="newPeriodValue" class="input input-sm" placeholder="Quantidade" style="width:140px" />
+            <select id="newPeriodUnit" class="select select-sm">
+              <option value="dia">Dia</option>
+              <option value="semana">Semana</option>
+              <option value="quinzena">Quinzena</option>
+              <option value="mes" selected>Mês</option>
+            </select>
+            <button id="btnAddRow" class="btn btn-secondary">+ Adicionar</button>
+          </div>
+          <div class="toolbar-right">
+            <button id="btnClearAll" class="btn btn-ghost">🗑 Limpar</button>
+            <button id="btnLoadExample" class="btn btn-ghost">📋 Exemplo</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="demand-table" id="demandTable">
+            <thead>
+              <tr>
+                <th>Período</th>
+                <th>Quantidade</th>
+                <th>Unidade</th>
+                <th>Equiv. Mensal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="demandBody">
+              <!-- linhas dinâmicas -->
+            </tbody>
+          </table>
+          <div class="table-empty" id="tableEmpty">
+            <span>Nenhum período adicionado.<br>Use o botão <strong>Exemplo</strong> para começar.</span>
+          </div>
+        </div>
+
+        <div class="demand-totals" id="demandTotals" style="display:none">
+          <div class="total-chip">
+            <span class="total-label">Total geral</span>
+            <span class="total-value" id="totalGeral">—</span>
+          </div>
+          <div class="total-chip">
+            <span class="total-label">Média mensal</span>
+            <span class="total-value" id="mediaGeral">—</span>
+          </div>
+          <div class="total-chip highlight">
+            <span class="total-label">Desvio Padrão</span>
+            <span class="total-value" id="desvioPadrao">—</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- BOTÃO CALCULAR -->
+      <div class="calc-action">
+        <button id="btnCalc" class="btn btn-primary btn-lg">
+          <span>Calcular Estoques</span>
+          <span class="btn-arrow">→</span>
+        </button>
+      </div>
+
+      <!-- RESULTADOS -->
+      <section class="card results-card" id="resultsSection" style="display:none">
+        <div class="card-header">
+          <span class="card-icon">📦</span>
+          <h2>Resultados</h2>
+          <span id="resultNsLabel" class="card-badge">NS: —</span>
+        </div>
+
+        <!-- Cards principais -->
+        <div class="result-grid">
+          <div class="result-card ciclo">
+            <div class="result-card-label">Estoque de Ciclo</div>
+            <div class="result-card-value" id="res-ciclo">—</div>
+            <div class="result-card-desc">Demanda durante o lead time</div>
+          </div>
+          <div class="result-card pulmao">
+            <div class="result-card-label">Estoque Pulmão</div>
+            <div class="result-card-value" id="res-pulmao">—</div>
+            <div class="result-card-desc">Proteção à variação de demanda</div>
+          </div>
+          <div class="result-card seguranca">
+            <div class="result-card-label">Estoque de Segurança</div>
+            <div class="result-card-value" id="res-seguranca">—</div>
+            <div class="result-card-desc">Cobertura de perdas no processo</div>
+          </div>
+          <div class="result-card maximo">
+            <div class="result-card-label">Estoque Máximo</div>
+            <div class="result-card-value" id="res-maximo">—</div>
+            <div class="result-card-desc">Ciclo + Pulmão + Segurança</div>
+          </div>
+        </div>
+
+        <!-- Tabela por período -->
+        <div class="period-results">
+          <h3 class="period-results-title">Breakdown por Período</h3>
+          <div class="period-tabs">
+            <button class="tab-btn active" data-tab="dia">Dia</button>
+            <button class="tab-btn" data-tab="semana">Semana</button>
+            <button class="tab-btn" data-tab="quinzena">Quinzena</button>
+            <button class="tab-btn" data-tab="mes">Mês</button>
+          </div>
+          <div class="period-table-wrap">
+            <table class="period-table" id="periodTable">
+              <thead>
+                <tr>
+                  <th>Métrica</th>
+                  <th>Valor</th>
+                  <th>Cálculo</th>
+                </tr>
+              </thead>
+              <tbody id="periodBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Memória de cálculo -->
+        <div class="memory-section">
+          <button class="memory-toggle" id="memoryToggle">
+            <span>▶</span> Ver memória de cálculo completa
+          </button>
+          <div class="memory-content" id="memoryContent" style="display:none">
+            <pre id="memoryText"></pre>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span>EstoqueCalc · Dimensionamento de Estoques</span>
+    </footer>
+
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
