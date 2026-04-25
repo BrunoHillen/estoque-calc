@@ -238,16 +238,47 @@ const tabLabels = {
 
 function renderTab(periodo, breakdown) {
   const d = breakdown[periodo];
-  const per = tabLabels[periodo];
   const fmt2 = (n) => n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const fmt0 = (n) => n.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+
+  const descricoes = {
+    dia: {
+      demanda:   'Média de consumo por dia útil',
+      ciclo:     'Demanda diária × lead time (dias)',
+      pulmao:    'Proteção à variação — base diária',
+      seguranca: 'Cobertura de perdas — base diária',
+      maximo:    'Ciclo + Pulmão + Segurança (dia)',
+    },
+    semana: {
+      demanda:   'Média de consumo por semana',
+      ciclo:     'Estoque necessário para cobrir 1 semana de lead time',
+      pulmao:    'Proteção à variação — base semanal',
+      seguranca: 'Cobertura de perdas — base semanal',
+      maximo:    'Ciclo + Pulmão + Segurança (semana)',
+    },
+    quinzena: {
+      demanda:   'Média de consumo por quinzena',
+      ciclo:     'Estoque necessário para cobrir 1 quinzena de lead time',
+      pulmao:    'Proteção à variação — base quinzenal',
+      seguranca: 'Cobertura de perdas — base quinzenal',
+      maximo:    'Ciclo + Pulmão + Segurança (quinzena)',
+    },
+    mes: {
+      demanda:   'Média de consumo mensal',
+      ciclo:     'Demanda durante o lead time de reposição',
+      pulmao:    'Proteção à variação de demanda mensal',
+      seguranca: 'Cobertura de perdas no processo mensal',
+      maximo:    'Ciclo + Pulmão + Segurança (mês)',
+    },
+  };
+
+  const desc = descricoes[periodo];
 
   const rows = [
-    ['Demanda média',      d.demanda,   `Média mensal × fator ${per}`],
-    ['Estoque de Ciclo',   d.ciclo,     `Ciclo mensal × fator ${per}`],
-    ['Estoque Pulmão',     d.pulmao,    `Pulmão mensal × fator ${per}`],
-    ['Estoque de Segurança', d.seguranca, `Segurança mensal × fator ${per}`],
-    ['Estoque Máximo',     d.maximo,    `Ciclo + Pulmão + Segurança (${per})`],
+    ['Demanda média',        d.demanda,    desc.demanda],
+    ['Estoque de Ciclo',     d.ciclo,      desc.ciclo],
+    ['Estoque Pulmão',       d.pulmao,     desc.pulmao],
+    ['Estoque de Segurança', d.seguranca,  desc.seguranca],
+    ['Estoque Máximo',       d.maximo,     desc.maximo],
   ];
 
   document.getElementById('periodBody').innerHTML = rows.map(([label, val, calc]) => `
@@ -258,6 +289,7 @@ function renderTab(periodo, breakdown) {
     </tr>
   `).join('');
 }
+
 
 // ── Memória toggle ────────────────────────────────────────────
 function bindMemoryToggle() {
